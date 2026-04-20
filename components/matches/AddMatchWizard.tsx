@@ -20,6 +20,7 @@ interface Props {
   groupSlug: string;
   players: Player[];
   currentUserId: string;
+  redirectTo?: string;
 }
 
 type Step = 1 | 2 | 3 | 4;
@@ -29,7 +30,7 @@ interface ScoreSet {
   b: string;
 }
 
-export function AddMatchWizard({ groupId, groupSlug, players, currentUserId }: Props) {
+export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, redirectTo }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState<Step>(1);
@@ -102,7 +103,7 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId }: P
       return;
     }
     toast("Match logged! Standings updated.", "success");
-    router.push(`/groups/${groupSlug}`);
+    router.push(redirectTo ?? `/groups/${groupSlug}`);
   }
 
   const unavailableForB = teamA;

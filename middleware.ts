@@ -7,7 +7,8 @@ export async function middleware(request: NextRequest) {
   const isProtected =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/groups") ||
-    pathname.startsWith("/account");
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/admin");
 
   // Skip Supabase entirely for public pages when credentials aren't configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";

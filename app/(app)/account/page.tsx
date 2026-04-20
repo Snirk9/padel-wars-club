@@ -19,17 +19,15 @@ export default async function AccountPage() {
     <AppShell>
       <TopBar title="Account" backHref="/dashboard" backLabel="Dashboard" />
       <div className="px-4 py-5 max-w-lg mx-auto">
-        {profile && (
-          <AccountSettingsForm
-            profile={{
-              id: profile.id,
-              full_name: profile.full_name,
-              phone: profile.phone,
-              avatar_url: profile.avatar_url,
-            }}
-            email={user.email || ""}
-          />
-        )}
+        <AccountSettingsForm
+          profile={{
+            id: user.id,
+            full_name: profile?.full_name ?? "",
+            phone: profile?.phone ?? null,
+            avatar_url: profile?.avatar_url ?? null,
+          }}
+          email={user.email || ""}
+        />
       </div>
     </AppShell>
   );

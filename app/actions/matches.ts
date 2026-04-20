@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export async function addMatch(formData: FormData) {
@@ -22,7 +22,8 @@ export async function addMatch(formData: FormData) {
   if (!winner) return { error: "Please select a winner" };
   if (!score.trim()) return { error: "Please enter the score" };
 
-  const { error } = await supabase.from("matches").insert({
+  const admin = createAdminClient();
+  const { error } = await admin.from("matches").insert({
     group_id,
     team_a_p1,
     team_a_p2,
@@ -39,8 +40,8 @@ export async function addMatch(formData: FormData) {
 }
 
 export async function deleteMatch(matchId: string, groupSlug: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("matches").delete().eq("id", matchId);
+  const admin = createAdminClient();
+  const { error } = await admin.from("matches").delete().eq("id", matchId);
   if (error) return { error: error.message };
   redirect(`/groups/${groupSlug}/matches`);
 }

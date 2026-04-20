@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -9,11 +9,11 @@ export async function updateProfile(formData: FormData) {
 
   const full_name = (formData.get("full_name") as string).trim();
   const phone = (formData.get("phone") as string).trim();
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("profiles")
-    .update({ full_name, phone: phone || null })
-    .eq("id", user.id);
+    .upsert({ id: user.id, full_name, phone: phone || null });
 
   if (error) return { error: error.message };
   return { success: true };
@@ -30,18 +30,19 @@ export async function uploadAvatar(formData: FormData) {
 
   const ext = file.name.split(".").pop();
   const path = `${user.id}/avatar.${ext}`;
+  const admin = createAdminClient();
 
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await admin.storage
     .from("avatars")
     .upload(path, file, { upsert: true });
 
   if (uploadError) return { error: uploadError.message };
 
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = admin.storage
     .from("avatars")
     .getPublicUrl(path);
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await admin
     .from("profiles")
     .update({ avatar_url: publicUrl + `?t=${Date.now()}` })
     .eq("id", user.id);

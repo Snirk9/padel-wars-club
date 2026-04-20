@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { generateSlug } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
@@ -19,8 +19,9 @@ export async function createGroup(formData: FormData) {
 
   const slug = generateSlug(name);
   const hashedPassword = await bcrypt.hash(password, 10);
+  const admin = createAdminClient();
 
-  const { data: group, error: groupError } = await supabase
+  const { data: group, error: groupError } = await admin
     .from("groups")
     .insert({ name, description: description || null, slug, join_password: hashedPassword, owner_id: user.id })
     .select()
@@ -28,7 +29,7 @@ export async function createGroup(formData: FormData) {
 
   if (groupError) return { error: groupError.message };
 
-  await supabase.from("group_members").insert({
+  await admin.from("group_members").insert({
     group_id: group.id,
     user_id: user.id,
     role: "owner",
@@ -44,8 +45,9 @@ export async function joinGroup(formData: FormData) {
 
   const groupName = (formData.get("group_name") as string).trim();
   const password = formData.get("password") as string;
+  const admin = createAdminClient();
 
-  const { data: groups } = await supabase
+  const { data: groups } = await admin
     .from("groups")
     .select("id, slug, name, join_password")
     .ilike("name", groupName)
@@ -61,7 +63,7 @@ export async function joinGroup(formData: FormData) {
 
   if (!matchedGroup) return { error: "Incorrect club name or password" };
 
-  const { error: memberError } = await supabase.from("group_members").insert({
+  const { error: memberError } = await admin.from("group_members").insert({
     group_id: matchedGroup.id,
     user_id: user.id,
     role: "member",
@@ -82,8 +84,9 @@ export async function updateGroup(groupId: string, formData: FormData) {
 
   const name = (formData.get("name") as string).trim();
   const description = (formData.get("description") as string).trim();
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("groups")
     .update({ name, description: description || null })
     .eq("id", groupId)
@@ -97,8 +100,9 @@ export async function deleteGroup(groupId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("groups")
     .delete()
     .eq("id", groupId)
@@ -109,37 +113,31 @@ export async function deleteGroup(groupId: string) {
 }
 
 export async function updateMemberRole(memberId: string, role: "admin" | "member") {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("group_members")
-    .update({ role })
-    .eq("id", memberId);
+  const admin = createAdminClient();
+  const { error } = await admin.from("group_members").update({ role }).eq("id", memberId);
   if (error) return { error: error.message };
   return { success: true };
 }
 
 export async function removeMember(memberId: string) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("group_members")
-    .delete()
-    .eq("id", memberId);
+  const admin = createAdminClient();
+  const { error } = await admin.from("group_members").delete().eq("id", memberId);
   if (error) return { error: error.message };
   return { success: true };
 }
 
 export async function transferOwnership(groupId: string, newOwnerId: string, currentOwnerId: string) {
-  const supabase = await createClient();
+  const admin = createAdminClient();
 
-  const { error: e1 } = await supabase
+  const { error: e1 } = await admin
     .from("groups")
     .update({ owner_id: newOwnerId })
     .eq("id", groupId)
     .eq("owner_id", currentOwnerId);
   if (e1) return { error: e1.message };
 
-  await supabase.from("group_members").update({ role: "admin" }).eq("group_id", groupId).eq("user_id", currentOwnerId);
-  await supabase.from("group_members").update({ role: "owner" }).eq("group_id", groupId).eq("user_id", newOwnerId);
+  await admin.from("group_members").update({ role: "admin" }).eq("group_id", groupId).eq("user_id", currentOwnerId);
+  await admin.from("group_members").update({ role: "owner" }).eq("group_id", groupId).eq("user_id", newOwnerId);
 
   return { success: true };
 }

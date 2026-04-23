@@ -30,7 +30,7 @@ export default function LandingPage() {
           <h1 className="text-4xl font-black text-gray-900 leading-tight tracking-tight mb-4">
             Track wins.<br />
             Settle scores.<br />
-            <span className="text-sky-500">Keep bragging rights real.</span>
+            <span className="text-sky-500">Let your record do the trash talking.</span>
           </h1>
           <p className="text-base text-gray-500 leading-relaxed mb-8 max-w-sm">
             The private padel league manager for friend groups who take the game seriously — but not themselves.

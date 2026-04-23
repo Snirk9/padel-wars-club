@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Padel Wars Club",
-  description: "Track wins. Settle scores. Keep bragging rights real.",
+  description: "Track wins. Settle scores. Let your record do the trash talking.",
   applicationName: "Padel Wars Club",
 };
 

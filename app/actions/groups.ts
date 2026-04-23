@@ -93,6 +93,24 @@ export async function updateGroup(groupId: string, formData: FormData) {
   return { success: true };
 }
 
+export async function changeGroupPassword(groupId: string, newPassword: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+  if (!newPassword || newPassword.length < 4) return { error: "Password must be at least 4 characters" };
+
+  const admin = createAdminClient();
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const { error } = await admin
+    .from("groups")
+    .update({ join_password: hashedPassword })
+    .eq("id", groupId)
+    .eq("owner_id", user.id);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function deleteGroup(groupId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

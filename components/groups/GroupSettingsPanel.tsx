@@ -15,8 +15,9 @@ import {
   updateMemberRole,
   removeMember,
   transferOwnership,
+  changeGroupPassword,
 } from "@/app/actions/groups";
-import { MoreHorizontal, Trash2, ShieldCheck, ShieldOff, ArrowRightLeft, Download } from "lucide-react";
+import { MoreHorizontal, Trash2, ShieldCheck, ShieldOff, ArrowRightLeft, Download, Eye, EyeOff } from "lucide-react";
 import type { Role } from "@/lib/types";
 
 export interface Member {
@@ -40,6 +41,9 @@ export function GroupSettingsPanel({ group, members, currentUserId, currentRole 
   const [editName, setEditName] = useState(group.name);
   const [editDesc, setEditDesc] = useState(group.description || "");
   const [savingInfo, setSavingInfo] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [memberActionsId, setMemberActionsId] = useState<string | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -56,6 +60,14 @@ export function GroupSettingsPanel({ group, members, currentUserId, currentRole 
     setSavingInfo(false);
     if (result?.error) toast(result.error, "error");
     else { toast("Club info updated"); router.refresh(); }
+  }
+
+  async function savePassword() {
+    setSavingPassword(true);
+    const result = await changeGroupPassword(group.id, newPassword);
+    setSavingPassword(false);
+    if (result?.error) toast(result.error, "error");
+    else { toast("Join password updated"); setNewPassword(""); }
   }
 
   async function handleDelete() {
@@ -114,6 +126,37 @@ export function GroupSettingsPanel({ group, members, currentUserId, currentRole 
           </Button>
         </div>
       </div>
+
+      {/* Join Password — owner only */}
+      {isOwner && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-50">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Join Password</p>
+          </div>
+          <div className="px-5 py-4 space-y-3">
+            <p className="text-xs text-gray-400">Passwords are stored securely and can't be shown. Set a new one below — existing members stay in the club.</p>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New join password"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-sky-400 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <Button onClick={savePassword} loading={savingPassword} disabled={newPassword.length < 4}>
+              Update password
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Members */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

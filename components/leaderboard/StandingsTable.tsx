@@ -9,7 +9,7 @@ interface StandingsTableProps {
   groupSlug: string;
 }
 
-const GRID = "grid-cols-[1fr_28px_28px_36px_28px_28px_36px]";
+const GRID = "grid-cols-[20px_180px_28px_28px_36px_28px_28px_36px]";
 
 function Diff({ value }: { value: number }) {
   return (
@@ -47,6 +47,7 @@ export function StandingsTable({ standings, currentUserId, groupSlug }: Standing
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Header */}
       <div className={cn("grid gap-1 px-3 py-2 border-b border-gray-50", GRID)}>
+        <span className="text-[9px] font-bold text-gray-400 uppercase text-center">#</span>
         <span className="text-[9px] font-bold text-gray-400 uppercase">Name</span>
         <span className="text-[9px] font-bold text-gray-400 uppercase text-right">GW</span>
         <span className="text-[9px] font-bold text-gray-400 uppercase text-right">GL</span>
@@ -57,7 +58,7 @@ export function StandingsTable({ standings, currentUserId, groupSlug }: Standing
       </div>
 
       <div className="divide-y divide-gray-50">
-        {standings.map((player) => {
+        {standings.map((player, index) => {
           const isCurrentUser = player.user_id === currentUserId;
           const gameDiff = player.wins - player.losses;
           return (
@@ -70,6 +71,7 @@ export function StandingsTable({ standings, currentUserId, groupSlug }: Standing
                 isCurrentUser && "bg-sky-50/50 hover:bg-sky-50"
               )}
             >
+              <span className="text-[10px] font-bold text-gray-400 text-center tabular-nums">{index + 1}</span>
               <div className="flex items-center gap-1.5 min-w-0">
                 <Avatar name={player.full_name} avatarUrl={player.avatar_url} size="xs" />
                 <span className={cn(

@@ -33,7 +33,7 @@ export async function AppShell({ children }: AppShellProps) {
               PADEL WARS
             </span>
           </Link>
-          <Link href="/" aria-label="Home" className="flex items-center text-gray-400 hover:text-gray-700 transition-colors">
+          <Link href="/dashboard" aria-label="Home" className="flex items-center text-gray-400 hover:text-gray-700 transition-colors">
             <House className="w-5 h-5" />
           </Link>
         </div>

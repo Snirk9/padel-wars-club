@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { DeleteGroupButton } from "@/components/dashboard/DeleteGroupButton";
 import { Users, ChevronRight, PlusCircle, LogIn } from "lucide-react";
 import type { Role } from "@/lib/types";
 
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
     .order("joined_at", { ascending: false });
 
   const firstName = profile?.full_name?.split(" ")[0] || "Player";
+  const isAdmin = user.email === process.env.ADMIN_EMAIL;
 
   return (
     <AppShell>
@@ -55,31 +57,42 @@ export default async function DashboardPage() {
               const memberCount = group.group_members?.[0]?.count ?? 0;
               const matchCount = group.matches?.[0]?.count ?? 0;
               const role = m.role as Role;
+              const isTestGroup = group.description?.startsWith("[ADMIN_TEST] ") ?? false;
 
               return (
-                <Link
+                <div
                   key={group.id}
-                  href={`/groups/${group.slug}`}
-                  className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 hover:border-sky-200 hover:shadow-md transition-all"
+                  className="flex items-center bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-sky-200 hover:shadow-md transition-all overflow-hidden"
                 >
-                  <div className="w-11 h-11 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
-                    <span className="text-xl">🏟</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-bold text-gray-900 truncate">{group.name}</p>
-                      {(role === "owner" || role === "admin") && (
-                        <Badge variant={role === "owner" ? "owner" : "admin"}>
-                          {role}
-                        </Badge>
-                      )}
+                  <Link
+                    href={`/groups/${group.slug}`}
+                    className="flex items-center gap-4 flex-1 px-4 py-4 min-w-0"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
+                      <span className="text-xl">🏟</span>
                     </div>
-                    <p className="text-xs text-gray-400">
-                      {memberCount} {memberCount === 1 ? "member" : "members"} · {matchCount} {matchCount === 1 ? "match" : "matches"}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
-                </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <p className="font-bold text-gray-900 truncate">{group.name}</p>
+                        {(role === "owner" || role === "admin") && (
+                          <Badge variant={role === "owner" ? "owner" : "admin"}>
+                            {role}
+                          </Badge>
+                        )}
+                        {isAdmin && isTestGroup && (
+                          <Badge variant="test">TEST</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {memberCount} {memberCount === 1 ? "member" : "members"} · {matchCount} {matchCount === 1 ? "match" : "matches"}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                  </Link>
+                  {role === "owner" && (
+                    <DeleteGroupButton groupId={group.id} groupName={group.name} />
+                  )}
+                </div>
               );
             })}
           </div>

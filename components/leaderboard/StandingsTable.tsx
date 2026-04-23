@@ -9,7 +9,7 @@ interface StandingsTableProps {
   groupSlug: string;
 }
 
-const GRID = "grid-cols-[20px_180px_28px_28px_36px_28px_28px_36px]";
+const GRID = "grid-cols-[20px_1fr_28px_28px_36px_28px_28px_36px]";
 
 function Diff({ value }: { value: number }) {
   return (

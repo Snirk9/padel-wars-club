@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, isValidSetScore } from "@/lib/utils";
 import { addMatch } from "@/app/actions/matches";
 import { useToast } from "@/components/ui/Toast";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Plus } from "lucide-react";
 
 interface Player {
   id: string;
@@ -41,6 +41,7 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
   const [playedAt, setPlayedAt] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const getPlayer = (id: string) => players.find((p) => p.id === id);
   const teamAPlayers = teamA.map(getPlayer).filter(Boolean) as Player[];
@@ -56,9 +57,24 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
   }
 
   function buildScoreString(): string {
-    const s = sets[0];
-    if (s.a === "" || s.b === "") return "";
-    return `${s.a}-${s.b}`;
+    const completeSets = sets.filter(s => s.a !== "" && s.b !== "");
+    if (completeSets.length === 0) return "";
+    return completeSets.map(s => `${s.a}-${s.b}`).join(", ");
+  }
+
+  function isSetInvalid(set: ScoreSet): boolean {
+    if (set.a === "" || set.b === "") return false;
+    return !isValidSetScore(Number(set.a), Number(set.b));
+  }
+
+  const hasInvalidSet = sets.some(isSetInvalid);
+
+  function addSet() {
+    if (sets.length < 3) setSets(prev => [...prev, { a: "", b: "" }]);
+  }
+
+  function removeSet(idx: number) {
+    setSets(prev => prev.filter((_, i) => i !== idx));
   }
 
   function toggleTeamA(id: string) {
@@ -103,7 +119,7 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
       return;
     }
     toast("Match logged! Standings updated.", "success");
-    router.push(redirectTo ?? `/groups/${groupSlug}`);
+    setSubmitted(true);
   }
 
   const unavailableForB = teamA;
@@ -250,41 +266,82 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
           <h2 className="text-xl font-black text-gray-900 mb-1">Enter the Score</h2>
           <p className="text-sm text-gray-500 mb-5">Set by set. Padel rules apply.</p>
 
-          <div className="mb-4">
-            <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
-              <p className="text-xs font-bold text-gray-400 uppercase mb-2">Set Score</p>
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-[10px] text-gray-400 mb-1 font-medium">
-                    {teamAPlayers.map(p => p.full_name.split(" ")[0]).join(" & ")}
-                  </p>
-                  <input
-                    type="number"
-                    min="0"
-                    max="7"
-                    value={sets[0].a}
-                    onChange={(e) => updateSet(0, "a", e.target.value)}
-                    placeholder="0"
-                    className="w-full text-2xl font-black text-center text-gray-900 border-2 border-gray-200 rounded-xl py-2 focus:outline-none focus:border-sky-500 transition-colors"
-                  />
+          <div className="mb-4 space-y-2">
+            {sets.map((set, idx) => {
+              const invalid = isSetInvalid(set);
+              return (
+                <div key={idx} className={cn("bg-white rounded-xl border px-4 py-3", invalid ? "border-red-300" : "border-gray-200")}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-gray-400 uppercase">
+                      {sets.length > 1 ? `Set ${idx + 1}` : "Score"}
+                    </p>
+                    {idx > 0 && (
+                      <button
+                        onClick={() => removeSet(idx)}
+                        className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      {idx === 0 && (
+                        <p className="text-[10px] text-gray-400 mb-1 font-medium">
+                          {teamAPlayers.map(p => p.full_name.split(" ")[0]).join(" & ")}
+                        </p>
+                      )}
+                      <input
+                        type="number"
+                        min="0"
+                        max="7"
+                        value={set.a}
+                        onChange={(e) => updateSet(idx, "a", e.target.value)}
+                        placeholder="0"
+                        className={cn(
+                          "w-full text-2xl font-black text-center text-gray-900 border-2 rounded-xl py-2 focus:outline-none transition-colors",
+                          invalid ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-sky-500"
+                        )}
+                      />
+                    </div>
+                    <span className="text-gray-300 font-black text-xl">–</span>
+                    <div className="flex-1">
+                      {idx === 0 && (
+                        <p className="text-[10px] text-gray-400 mb-1 font-medium">
+                          {teamBPlayers.map(p => p.full_name.split(" ")[0]).join(" & ")}
+                        </p>
+                      )}
+                      <input
+                        type="number"
+                        min="0"
+                        max="7"
+                        value={set.b}
+                        onChange={(e) => updateSet(idx, "b", e.target.value)}
+                        placeholder="0"
+                        className={cn(
+                          "w-full text-2xl font-black text-center text-gray-900 border-2 rounded-xl py-2 focus:outline-none transition-colors",
+                          invalid ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-sky-500"
+                        )}
+                      />
+                    </div>
+                  </div>
+                  {invalid && (
+                    <p className="text-xs text-red-500 mt-2 font-medium">
+                      Invalid score. Valid results: 6-0 to 6-4, 7-5, or 7-6.
+                    </p>
+                  )}
                 </div>
-                <span className="text-gray-300 font-black text-xl">–</span>
-                <div className="flex-1">
-                  <p className="text-[10px] text-gray-400 mb-1 font-medium">
-                    {teamBPlayers.map(p => p.full_name.split(" ")[0]).join(" & ")}
-                  </p>
-                  <input
-                    type="number"
-                    min="0"
-                    max="7"
-                    value={sets[0].b}
-                    onChange={(e) => updateSet(0, "b", e.target.value)}
-                    placeholder="0"
-                    className="w-full text-2xl font-black text-center text-gray-900 border-2 border-gray-200 rounded-xl py-2 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-              </div>
-            </div>
+              );
+            })}
+            {sets.length < 3 && (
+              <button
+                onClick={addSet}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-xs font-semibold text-gray-400 hover:border-sky-300 hover:text-sky-500 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add set
+              </button>
+            )}
           </div>
 
           {/* Winner override */}
@@ -333,7 +390,7 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
             <Button
               size="lg"
               fullWidth
-              disabled={!winner || !buildScoreString()}
+              disabled={!winner || !buildScoreString() || hasInvalidSet}
               onClick={() => setStep(4)}
               className="gap-2"
             >
@@ -387,7 +444,7 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
             </div>
             <div className="px-5 py-3 flex items-center gap-2">
               <span className="text-xs text-gray-400">Date:</span>
-              <span className="text-xs font-semibold text-gray-700">{playedAt}</span>
+              <span className="text-xs font-semibold text-gray-700">{formatDate(playedAt)}</span>
             </div>
           </div>
 
@@ -397,14 +454,38 @@ export function AddMatchWizard({ groupId, groupSlug, players, currentUserId, red
             </p>
           )}
 
-          <div className="flex gap-3">
-            <Button variant="secondary" size="lg" onClick={() => setStep(3)} disabled={loading}>
-              Edit
-            </Button>
-            <Button size="lg" fullWidth onClick={handleSubmit} loading={loading}>
-              Submit Match ✓
-            </Button>
-          </div>
+          {!submitted ? (
+            <div className="flex gap-3">
+              <Button variant="secondary" size="lg" onClick={() => setStep(3)} disabled={loading}>
+                Edit
+              </Button>
+              <Button size="lg" fullWidth onClick={handleSubmit} loading={loading}>
+                Submit Match ✓
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Button
+                size="lg"
+                fullWidth
+                variant="secondary"
+                onClick={() => {
+                  setTeamA([]);
+                  setTeamB([]);
+                  setSets([{ a: "", b: "" }]);
+                  setWinner(null);
+                  setError(null);
+                  setSubmitted(false);
+                  setStep(1);
+                }}
+              >
+                + Add another match
+              </Button>
+              <Button size="lg" fullWidth onClick={() => router.push(redirectTo ?? `/groups/${groupSlug}`)}>
+                Done
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

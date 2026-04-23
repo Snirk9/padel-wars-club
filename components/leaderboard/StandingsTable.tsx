@@ -15,14 +15,23 @@ function Diff({ value }: { value: number }) {
   return (
     <span className={cn(
       "text-xs font-semibold text-right tabular-nums",
-      value > 0 && "text-green-600",
-      value < 0 && "text-red-500",
+      value > 0 && "text-win",
+      value < 0 && "text-loss",
       value === 0 && "text-gray-400"
     )}>
       {value > 0 ? "+" : ""}{value}
     </span>
   );
 }
+
+const LEGEND = [
+  { key: "GW", label: "Games Won" },
+  { key: "GL", label: "Games Lost" },
+  { key: "G+/-", label: "Game Differential" },
+  { key: "SW", label: "Sets Won" },
+  { key: "SL", label: "Sets Lost" },
+  { key: "S+/-", label: "Set Differential" },
+];
 
 export function StandingsTable({ standings, currentUserId, groupSlug }: StandingsTableProps) {
   if (standings.length === 0) {
@@ -34,6 +43,7 @@ export function StandingsTable({ standings, currentUserId, groupSlug }: Standing
   }
 
   return (
+    <div className="space-y-1.5">
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       {/* Header */}
       <div className={cn("grid gap-1 px-3 py-2 border-b border-gray-50", GRID)}>
@@ -71,16 +81,24 @@ export function StandingsTable({ standings, currentUserId, groupSlug }: Standing
                 </span>
               </div>
 
-              <span className="text-xs font-bold text-green-600 text-right tabular-nums">{player.wins}</span>
+              <span className="text-xs font-bold text-win text-right tabular-nums">{player.wins}</span>
               <span className="text-xs text-gray-400 text-right tabular-nums">{player.losses}</span>
               <Diff value={gameDiff} />
-              <span className="text-xs font-bold text-green-600 text-right tabular-nums">{player.sets_won}</span>
+              <span className="text-xs font-bold text-win text-right tabular-nums">{player.sets_won}</span>
               <span className="text-xs text-gray-400 text-right tabular-nums">{player.sets_lost}</span>
               <Diff value={player.set_diff} />
             </Link>
           );
         })}
       </div>
+    </div>
+    <div className="flex flex-wrap gap-x-3 gap-y-1 px-1">
+      {LEGEND.map(({ key, label }) => (
+        <span key={key} className="text-[10px] text-gray-400">
+          <span className="font-bold text-gray-500">{key}</span> = {label}
+        </span>
+      ))}
+    </div>
     </div>
   );
 }

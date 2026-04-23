@@ -40,8 +40,8 @@ export default async function AdminGroupPage({ params }: Props) {
     id: m.id,
     user_id: m.user_id,
     role: m.role,
-    profile: m.profiles as { id: string; full_name: string; avatar_url: string | null },
-  })).filter((m) => m.profile);
+    profile: (Array.isArray(m.profiles) ? m.profiles[0] : m.profiles) as { id: string; full_name: string; avatar_url: string | null } | null,
+  })).filter((m): m is typeof m & { profile: NonNullable<typeof m.profile> } => m.profile != null);
 
   // Fetch matches
   const { data: matches } = await admin

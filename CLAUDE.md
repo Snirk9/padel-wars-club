@@ -30,8 +30,8 @@ A mobile-first private padel league management app. Users create or join isolate
 
 ## Design Constraints
 - Mobile-first, light theme only — no dark mode
-- Primary color: `#F97316` (orange-500)
-- Win color: `#16A34A` (green-600)
+- Primary color: `#0EA5E9` (sky-500) — use `bg-brand`, `text-brand`, `border-brand` tokens
+- Win color: `#16A34A` (green-600) — use `text-win` token
 - No loud gradients, no neon, no enterprise-style dense tables
 - Bottom tab nav inside group context; top bar for all other pages
 - All tap targets ≥ 44px

@@ -8,9 +8,10 @@ import { logout } from "@/app/actions/auth";
 interface Props {
   fullName: string | null;
   avatarUrl: string | null;
+  isAdmin?: boolean;
 }
 
-export function ProfileMenu({ fullName, avatarUrl }: Props) {
+export function ProfileMenu({ fullName, avatarUrl, isAdmin }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -40,6 +41,16 @@ export function ProfileMenu({ fullName, avatarUrl }: Props) {
           >
             Account
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-sky-600 hover:bg-sky-50"
+            >
+              Admin panel
+              <span className="text-[10px] bg-sky-100 text-sky-600 font-bold px-1.5 py-0.5 rounded-full">DEV</span>
+            </Link>
+          )}
           <button
             onClick={() => logout()}
             className="w-full flex items-center px-4 py-2.5 text-sm text-red-500 hover:bg-red-50"

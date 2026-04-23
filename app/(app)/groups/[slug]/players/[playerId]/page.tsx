@@ -121,15 +121,15 @@ export default async function PlayerProfilePage({ params }: Props) {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-4 text-center">
-            <p className="text-2xl font-black text-green-600">{wins}</p>
+            <p className="text-2xl font-black text-win">{wins}</p>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Wins</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-4 text-center">
-            <p className="text-2xl font-black text-red-500">{losses}</p>
+            <p className="text-2xl font-black text-loss">{losses}</p>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Losses</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-4 text-center">
-            <p className={`text-2xl font-black ${setDiff > 0 ? "text-green-600" : setDiff < 0 ? "text-red-500" : "text-gray-400"}`}>
+            <p className={`text-2xl font-black ${setDiff > 0 ? "text-win" : setDiff < 0 ? "text-loss" : "text-gray-400"}`}>
               {setDiff > 0 ? "+" : ""}{setDiff}
             </p>
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Diff</p>

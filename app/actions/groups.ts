@@ -55,11 +55,8 @@ export async function joinGroup(formData: FormData) {
 
   if (!groups || groups.length === 0) return { error: "No club found with that name" };
 
-  let matchedGroup = null;
-  for (const g of groups) {
-    const match = await bcrypt.compare(password, g.join_password);
-    if (match) { matchedGroup = g; break; }
-  }
+  const results = await Promise.all(groups.map(g => bcrypt.compare(password, g.join_password)));
+  const matchedGroup = groups.find((_, i) => results[i]) ?? null;
 
   if (!matchedGroup) return { error: "Incorrect club name or password" };
 
@@ -113,20 +110,68 @@ export async function deleteGroup(groupId: string) {
 }
 
 export async function updateMemberRole(memberId: string, role: "admin" | "member") {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
   const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("group_members")
+    .select("group_id")
+    .eq("id", memberId)
+    .single();
+  if (!target) return { error: "Member not found" };
+
+  const { data: caller } = await admin
+    .from("group_members")
+    .select("role")
+    .eq("group_id", target.group_id)
+    .eq("user_id", user.id)
+    .single();
+  if (!caller || !["owner", "admin"].includes(caller.role)) return { error: "Not authorized" };
+
   const { error } = await admin.from("group_members").update({ role }).eq("id", memberId);
   if (error) return { error: error.message };
   return { success: true };
 }
 
 export async function removeMember(memberId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
   const admin = createAdminClient();
+
+  const { data: target } = await admin
+    .from("group_members")
+    .select("group_id, user_id")
+    .eq("id", memberId)
+    .single();
+  if (!target) return { error: "Member not found" };
+
+  // Allow self-removal OR owner/admin removing others
+  if (target.user_id !== user.id) {
+    const { data: caller } = await admin
+      .from("group_members")
+      .select("role")
+      .eq("group_id", target.group_id)
+      .eq("user_id", user.id)
+      .single();
+    if (!caller || !["owner", "admin"].includes(caller.role)) return { error: "Not authorized" };
+  }
+
   const { error } = await admin.from("group_members").delete().eq("id", memberId);
   if (error) return { error: error.message };
   return { success: true };
 }
 
 export async function transferOwnership(groupId: string, newOwnerId: string, currentOwnerId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+  if (user.id !== currentOwnerId) return { error: "Not authorized" };
+
   const admin = createAdminClient();
 
   const { error: e1 } = await admin

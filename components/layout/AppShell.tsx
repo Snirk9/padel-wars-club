@@ -40,6 +40,7 @@ export async function AppShell({ children }: AppShellProps) {
         <ProfileMenu
           fullName={profile?.full_name ?? null}
           avatarUrl={profile?.avatar_url ?? null}
+          isAdmin={user?.email === process.env.ADMIN_EMAIL}
         />
       </header>
       <main className="max-w-lg mx-auto">{children}</main>

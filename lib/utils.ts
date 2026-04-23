@@ -23,17 +23,25 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+export function isValidSetScore(a: number, b: number): boolean {
+  const hi = Math.max(a, b);
+  const lo = Math.min(a, b);
+  if (hi === 6) return lo <= 4;          // 6-0 … 6-4
+  if (hi === 7) return lo === 5 || lo === 6; // 7-5 or 7-6
+  return false;
+}
+
 export function parseScore(score: string): { setsWon: number; setsLost: number } {
   const sets = score.split(",").map((s) => s.trim());
-  let won = 0;
-  let lost = 0;
+  let aTotal = 0;
+  let bTotal = 0;
   for (const set of sets) {
     const [a, b] = set.split("-").map(Number);
     if (isNaN(a) || isNaN(b)) continue;
-    if (a > b) won++;
-    else lost++;
+    aTotal += a;
+    bTotal += b;
   }
-  return { setsWon: won, setsLost: lost };
+  return { setsWon: aTotal, setsLost: bTotal };
 }
 
 export function getInitials(name: string): string {

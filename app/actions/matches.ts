@@ -23,6 +23,16 @@ export async function addMatch(formData: FormData) {
   if (!score.trim()) return { error: "Please enter the score" };
 
   const admin = createAdminClient();
+
+  // Verify the calling user is a member of this group
+  const { data: membership } = await admin
+    .from("group_members")
+    .select("id")
+    .eq("group_id", group_id)
+    .eq("user_id", user.id)
+    .single();
+  if (!membership) return { error: "You are not a member of this club" };
+
   const { error } = await admin.from("matches").insert({
     group_id,
     team_a_p1,
@@ -40,7 +50,30 @@ export async function addMatch(formData: FormData) {
 }
 
 export async function deleteMatch(matchId: string, groupSlug: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
   const admin = createAdminClient();
+
+  // Verify the match exists and the caller is owner/admin of its group
+  const { data: match } = await admin
+    .from("matches")
+    .select("group_id")
+    .eq("id", matchId)
+    .single();
+  if (!match) return { error: "Match not found" };
+
+  const { data: membership } = await admin
+    .from("group_members")
+    .select("role")
+    .eq("group_id", match.group_id)
+    .eq("user_id", user.id)
+    .single();
+  if (!membership || !["owner", "admin"].includes(membership.role)) {
+    return { error: "Not authorized" };
+  }
+
   const { error } = await admin.from("matches").delete().eq("id", matchId);
   if (error) return { error: error.message };
   redirect(`/groups/${groupSlug}/matches`);

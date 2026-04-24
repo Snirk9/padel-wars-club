@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BarChart3, History, Users, Settings } from "lucide-react";
+import { BarChart3, History, Users, Settings, Swords } from "lucide-react";
 
 interface NavItem {
   label: string;
@@ -23,6 +23,7 @@ export function BottomNav({ groupSlug, isAdmin }: BottomNavProps) {
   const items: NavItem[] = [
     { label: "Standings", href: base, icon: BarChart3 },
     { label: "Matches", href: `${base}/matches`, icon: History },
+    { label: "1v1", href: `${base}/1v1`, icon: Swords },
     { label: "Players", href: `${base}/players`, icon: Users },
     ...(isAdmin ? [{ label: "Settings", href: `${base}/settings`, icon: Settings }] : []),
   ];

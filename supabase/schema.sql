@@ -171,13 +171,10 @@ CREATE POLICY "Users can update own profile"
   WITH CHECK (id = auth.uid());
 
 -- ── groups policies ───────────────────────────────────────────
-CREATE POLICY "Members can view their groups"
+CREATE POLICY "Authenticated users can browse groups"
   ON public.groups FOR SELECT
-  USING (
-    id IN (
-      SELECT group_id FROM public.group_members WHERE user_id = auth.uid()
-    )
-  );
+  TO authenticated
+  USING (true);
 
 CREATE POLICY "Authenticated users can create groups"
   ON public.groups FOR INSERT
@@ -250,6 +247,30 @@ CREATE POLICY "Owner/admin can delete matches"
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
     )
   );
+
+-- ── suggestions ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.suggestions (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject      TEXT NOT NULL,
+  description  TEXT NOT NULL,
+  is_anonymous BOOLEAN NOT NULL DEFAULT true,
+  user_id      UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  status       TEXT NOT NULL DEFAULT 'new'
+               CHECK (status IN ('new', 'reviewed', 'accepted', 'rejected')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.suggestions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can submit suggestions"
+  ON public.suggestions FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Admin page uses service-role (bypasses RLS); block direct anon-key reads
+CREATE POLICY "Block direct reads"
+  ON public.suggestions FOR SELECT
+  USING (false);
 
 -- ── Storage bucket for avatars ────────────────────────────────
 INSERT INTO storage.buckets (id, name, public)

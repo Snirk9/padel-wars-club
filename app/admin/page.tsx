@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { AdminGroupForm } from "@/components/admin/AdminGroupForm";
 import { AdminPlayersPanel } from "@/components/admin/AdminPlayersPanel";
-import { ChevronRight, Users } from "lucide-react";
+import { ChevronRight, Users, Lightbulb } from "lucide-react";
 
 const TEST_EMAIL_SUFFIX = "@padelwars.internal";
 const TEST_GROUP_PREFIX = "[ADMIN_TEST]";
@@ -101,6 +101,24 @@ export default async function AdminPage() {
       <section className="space-y-4">
         <h2 className="text-base font-black text-gray-800">Test Players</h2>
         <AdminPlayersPanel players={testPlayers} />
+      </section>
+
+      {/* Suggestions */}
+      <section className="space-y-4">
+        <h2 className="text-base font-black text-gray-800">User Feedback</h2>
+        <Link
+          href="/admin/suggestions"
+          className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 hover:border-sky-200 hover:bg-sky-50/30 transition-all"
+        >
+          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+            <Lightbulb className="w-5 h-5 text-amber-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-gray-900">Suggestions</p>
+            <p className="text-xs text-gray-400 mt-0.5">Review bugs and feature requests from users</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+        </Link>
       </section>
     </div>
   );

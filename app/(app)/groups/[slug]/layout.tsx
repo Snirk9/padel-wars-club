@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { SuggestionButton } from "@/components/suggestions/SuggestionButton";
 import { type ReactNode } from "react";
 import type { Role } from "@/lib/types";
 
@@ -38,6 +39,7 @@ export default async function GroupLayout({ children, params }: Props) {
     <div className="min-h-screen bg-gray-50">
       {children}
       <BottomNav groupSlug={slug} isAdmin={isAdmin} />
+      <SuggestionButton />
     </div>
   );
 }

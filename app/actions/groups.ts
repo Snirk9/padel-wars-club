@@ -74,6 +74,33 @@ export async function joinGroup(formData: FormData) {
   redirect(`/groups/${matchedGroup.slug}`);
 }
 
+export async function getUnjoinedGroups(): Promise<{ id: string; name: string; slug: string }[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const admin = createAdminClient();
+
+  const { data: memberships } = await admin
+    .from("group_members")
+    .select("group_id")
+    .eq("user_id", user.id);
+
+  const joinedIds = (memberships || []).map((m) => m.group_id);
+
+  let query = admin
+    .from("groups")
+    .select("id, name, slug")
+    .order("name", { ascending: true });
+
+  if (joinedIds.length > 0) {
+    query = query.not("id", "in", `(${joinedIds.join(",")})`);
+  }
+
+  const { data } = await query;
+  return data || [];
+}
+
 export async function updateGroup(groupId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
